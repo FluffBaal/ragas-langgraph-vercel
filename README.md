@@ -42,7 +42,6 @@ Documents → Process → Simple Evolution → Multi-Context → Reasoning → G
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/your-org/ragas-langgraph-vercel.git
    cd ragas-langgraph-vercel
    ```
 
@@ -67,27 +66,7 @@ Documents → Process → Simple Evolution → Multi-Context → Reasoning → G
    http://localhost:3000
    ```
 
-### Production Deployment
 
-#### Deploy to Vercel (Recommended)
-
-1. **One-click deploy**
-   [![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/your-org/ragas-langgraph-vercel)
-
-2. **Manual deployment**
-   ```bash
-   npm install -g vercel
-   vercel login
-   vercel --prod
-   ```
-
-3. **Set environment variables**
-   ```bash
-   vercel env add OPENAI_API_KEY
-   vercel env add OPENAI_MODEL
-   ```
-
-For detailed deployment instructions, see [DEPLOYMENT.md](./DEPLOYMENT.md).
 
 ## 📖 Usage
 
@@ -98,56 +77,7 @@ For detailed deployment instructions, see [DEPLOYMENT.md](./DEPLOYMENT.md).
 3. **Generate**: Process documents through the LangGraph pipeline
 4. **Review Results**: Examine evolved questions, answers, and contexts
 
-### API Usage
 
-```javascript
-const formData = new FormData();
-formData.append('config', JSON.stringify({
-  maxQuestions: 10,
-  evolutionTypes: ['simple', 'multi_context', 'reasoning'],
-  complexityTarget: 7
-}));
-formData.append('document_0', file);
-
-const response = await fetch('/api/generate', {
-  method: 'POST',
-  body: formData
-});
-
-const results = await response.json();
-```
-
-For complete API documentation, see [API.md](./API.md).
-
-## 🧪 Testing
-
-### Run Tests
-
-```bash
-# Unit tests
-npm run test
-
-# Integration tests
-npm run test:integration
-
-# Coverage report
-npm run test:coverage
-
-# Watch mode
-npm run test:watch
-```
-
-### Test Structure
-
-```
-tests/
-├── unit/                 # Unit tests
-│   ├── langgraph.test.ts # LangGraph implementation
-│   ├── api.test.ts       # API routes
-│   └── validation.test.ts # Validation utilities
-└── integration/          # Integration tests
-    └── api-integration.test.ts
-```
 
 ## 📊 Configuration
 
@@ -170,23 +100,9 @@ tests/
 ### File Requirements
 
 - **Formats**: `.txt`, `.md`, `.pdf`
-- **Size**: Maximum 10MB per file
 - **Content**: Minimum 100 characters
 - **Count**: Maximum 10 files per request
 
-### Environment Variables
-
-```bash
-# Required
-OPENAI_API_KEY=your_api_key
-OPENAI_MODEL=gpt-4.1-mini
-
-# Optional
-NODE_ENV=production
-ENABLE_CACHING=true
-MAX_DOCUMENT_SIZE=10485760
-RATE_LIMIT_REQUESTS=100
-```
 
 ## 🔧 Development
 
