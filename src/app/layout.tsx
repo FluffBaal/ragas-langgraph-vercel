@@ -84,7 +84,7 @@ export default function RootLayout({
               <div className="flex flex-col md:flex-row justify-between items-center">
                 <div className="flex items-center space-x-4">
                   <p className="text-sm text-gray-600">
-                    © 2025 RAGAS LangGraph Vercel. Built with Next.js and deployed on Vercel.
+                    
                   </p>
                 </div>
                 <div className="flex items-center space-x-4 mt-4 md:mt-0">

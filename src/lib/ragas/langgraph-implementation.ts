@@ -209,41 +209,76 @@ export class RAGASLangGraph {
     const evolved_questions: EvolvedQuestion[] = [...(state.evolved_questions || [])];
     const errors = [...(state.errors || [])];
     
-    if (state.processed_docs.length < 2) {
-      errors.push('Need at least 2 documents for multi-context evolution');
-      return { evolved_questions, errors };
+    // Handle single document case - create multi-context questions from different parts
+    if (state.processed_docs.length === 1) {
+      const doc = state.processed_docs[0];
+      if (doc.initial_questions.length > 0 && doc.content.length > 1000) {
+        try {
+          // Split content into two halves for context synthesis
+          const midPoint = Math.floor(doc.content.length / 2);
+          const firstHalf = doc.content.substring(0, midPoint);
+          const secondHalf = doc.content.substring(midPoint);
+          
+          const evolved = await this.evolveQuestionMultiContextSingleDoc(
+            doc.initial_questions[0],
+            firstHalf,
+            secondHalf,
+            doc.content
+          );
+          
+          if (evolved) {
+            evolved_questions.push({
+              id: uuidv4(),
+              question: evolved,
+              evolution_type: 'multi_context',
+              complexity_score: 7.0,
+              source_document_ids: [doc.id],
+              metadata: {
+                original_question: doc.initial_questions[0],
+                requires_multiple_contexts: true,
+                single_doc_synthesis: true,
+                evolution_timestamp: new Date().toISOString()
+              }
+            });
+          }
+        } catch (error) {
+          errors.push(`Multi-context evolution error: ${error}`);
+        }
+      }
     }
     
-    // Create questions spanning multiple documents
-    for (let i = 0; i < state.processed_docs.length; i++) {
-      for (let j = i + 1; j < Math.min(i + 2, state.processed_docs.length); j++) {
-        const doc1 = state.processed_docs[i];
-        const doc2 = state.processed_docs[j];
-        
-        if (doc1.initial_questions.length > 0) {
-          try {
-            const evolved = await this.evolveQuestionMultiContext(
-              doc1.initial_questions[0],
-              doc1.content,
-              doc2.content
-            );
-            
-            if (evolved) {
-              evolved_questions.push({
-                id: uuidv4(),
-                question: evolved,
-                evolution_type: 'multi_context',
-                complexity_score: 7.0,
-                source_document_ids: [doc1.id, doc2.id],
-                metadata: {
-                  original_question: doc1.initial_questions[0],
-                  requires_multiple_contexts: true,
-                  evolution_timestamp: new Date().toISOString()
-                }
-              });
+    // Handle multiple documents case - original logic
+    if (state.processed_docs.length >= 2) {
+      for (let i = 0; i < state.processed_docs.length; i++) {
+        for (let j = i + 1; j < Math.min(i + 2, state.processed_docs.length); j++) {
+          const doc1 = state.processed_docs[i];
+          const doc2 = state.processed_docs[j];
+          
+          if (doc1.initial_questions.length > 0) {
+            try {
+              const evolved = await this.evolveQuestionMultiContext(
+                doc1.initial_questions[0],
+                doc1.content,
+                doc2.content
+              );
+              
+              if (evolved) {
+                evolved_questions.push({
+                  id: uuidv4(),
+                  question: evolved,
+                  evolution_type: 'multi_context',
+                  complexity_score: 7.0,
+                  source_document_ids: [doc1.id, doc2.id],
+                  metadata: {
+                    original_question: doc1.initial_questions[0],
+                    requires_multiple_contexts: true,
+                    evolution_timestamp: new Date().toISOString()
+                  }
+                });
+              }
+            } catch (error) {
+              errors.push(`Multi-context evolution error: ${error}`);
             }
-          } catch (error) {
-            errors.push(`Multi-context evolution error: ${error}`);
           }
         }
       }
@@ -274,6 +309,40 @@ export class RAGASLangGraph {
         question,
         context1: context1.slice(0, 800),
         context2: context2.slice(0, 800)
+      });
+      return response.content.toString().trim();
+    } catch (error) {
+      return null;
+    }
+  }
+  
+  private async evolveQuestionMultiContextSingleDoc(
+    question: string,
+    firstPart: string,
+    secondPart: string,
+    fullContent: string
+  ): Promise<string | null> {
+    const prompt = ChatPromptTemplate.fromTemplate(`
+      Evolve the following question to require synthesizing information from different parts of the same document.
+      The evolved question should connect information from the beginning and end of the document,
+      or require understanding relationships between different sections.
+      
+      Original Question: {question}
+      Document Overview: {overview}
+      Beginning Section: {firstPart}
+      Later Section: {secondPart}
+      
+      Create a question that requires understanding both sections to answer properly.
+      Return only the evolved question:
+    `);
+    
+    try {
+      const chain = prompt.pipe(this.llm);
+      const response = await chain.invoke({
+        question,
+        overview: fullContent.slice(0, 300) + '...',
+        firstPart: firstPart.slice(0, 600),
+        secondPart: secondPart.slice(0, 600)
       });
       return response.content.toString().trim();
     } catch (error) {
@@ -440,7 +509,7 @@ export class RAGASLangGraph {
     return { question_contexts };
   }
   
-  private extractRelevantPassages(question: string, content: string): string[] {
+  private extractRelevantPassages(_question: string, content: string): string[] {
     // Extract meaningful passages from the content
     const passages: string[] = [];
     
