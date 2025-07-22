@@ -5,8 +5,10 @@ import { DocumentUpload } from './DocumentUpload';
 import { Button } from './ui/Button';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/Card';
 import { Progress } from './ui/Progress';
-import { Settings, Play, Download, Loader2, UploadCloud } from 'lucide-react';
+import { Settings, Play, Download, Loader2, UploadCloud, Eye, EyeOff } from 'lucide-react';
 import { GenerationConfig, GenerationResult } from '@/types';
+import { ExtractedTextPreview } from './ExtractedTextPreview';
+import { extractPDFTextSimple } from '@/lib/pdf-utils';
 
 interface GenerationFormProps {
   onGenerate: (files: File[], config: GenerationConfig) => Promise<void>;
@@ -34,6 +36,9 @@ export const GenerationForm: React.FC<GenerationFormProps> = ({
   });
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [showApiKey, setShowApiKey] = useState(false);
+  const [showPreview, setShowPreview] = useState(false);
+  const [extractedDocuments, setExtractedDocuments] = useState<{name: string; content: string; pageCount?: number}[]>([]);
+  const [isExtracting, setIsExtracting] = useState(false);
 
   // Load API key from localStorage on mount
   useEffect(() => {
@@ -49,6 +54,58 @@ export const GenerationForm: React.FC<GenerationFormProps> = ({
       localStorage.setItem('openai_api_key', config.openaiApiKey);
     }
   }, [config.openaiApiKey]);
+
+  // Extract text when files change
+  useEffect(() => {
+    const extractText = async () => {
+      console.log('Extracting text from files:', files);
+      setIsExtracting(true);
+      const extracted = [];
+      
+      for (const file of files) {
+        try {
+          let content: string;
+          let pageCount: number | undefined;
+          
+          if (file.name.toLowerCase().endsWith('.pdf')) {
+            // Extract PDF text using our utility function
+            const pdfResult = await extractPDFTextSimple(file);
+            content = pdfResult.content;
+            pageCount = pdfResult.pageCount;
+          } else {
+            // For text and markdown files
+            content = await file.text();
+            console.log(`Extracted ${content.length} characters from ${file.name}`);
+          }
+          
+          extracted.push({
+            name: file.name,
+            content: content.length > 5000 ? content.substring(0, 5000) + '\n\n[... truncated for preview ...]' : content,
+            pageCount: pageCount
+          });
+        } catch (error) {
+          console.error('Error reading file:', error);
+          extracted.push({
+            name: file.name,
+            content: `Error reading file: ${error}\n\nFile type: ${file.type || 'unknown'}\nFile size: ${(file.size / 1024).toFixed(2)} KB`
+          });
+        }
+      }
+      
+      console.log('Extracted documents:', extracted);
+      setExtractedDocuments(extracted);
+      setIsExtracting(false);
+      // Don't auto-show, let user click the button
+    };
+    
+    if (files.length > 0) {
+      extractText();
+    } else {
+      setExtractedDocuments([]);
+      setShowPreview(false);
+      setIsExtracting(false);
+    }
+  }, [files]);
 
   const handleGenerate = async () => {
     if (files.length === 0) return;
@@ -81,11 +138,31 @@ export const GenerationForm: React.FC<GenerationFormProps> = ({
     <div className="max-w-4xl mx-auto space-y-6">
       {/* Document Upload */}
       <Card>
-        <CardHeader>
+        <CardHeader className="flex justify-between items-center">
           <CardTitle className="flex items-center">
             <UploadCloud className="h-5 w-5 mr-2" />
             Upload Documents
           </CardTitle>
+          {files.length > 0 && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShowPreview(!showPreview)}
+              disabled={isGenerating || isExtracting}
+            >
+              {isExtracting ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                  Extracting...
+                </>
+              ) : (
+                <>
+                  {showPreview ? <EyeOff className="h-4 w-4 mr-1" /> : <Eye className="h-4 w-4 mr-1" />}
+                  {showPreview ? 'Hide' : 'Show'} Preview
+                </>
+              )}
+            </Button>
+          )}
         </CardHeader>
         <CardContent>
           <DocumentUpload
@@ -94,6 +171,13 @@ export const GenerationForm: React.FC<GenerationFormProps> = ({
           />
         </CardContent>
       </Card>
+
+      {/* Extracted Text Preview */}
+      <ExtractedTextPreview
+        documents={extractedDocuments}
+        isVisible={showPreview}
+        onClose={() => setShowPreview(false)}
+      />
 
       {/* API Key Configuration */}
       <Card>

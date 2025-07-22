@@ -9,8 +9,22 @@ import {
   globalRateLimiter 
 } from '@/lib/validation';
 
+// Configure max request size and timeout
+export const maxDuration = 60; // Maximum allowed duration for Vercel Hobby plan
+export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs'; // Use Node.js runtime for streaming
+
 export async function POST(request: NextRequest) {
   try {
+    // Check Content-Length header for early size validation
+    const contentLength = request.headers.get('content-length');
+    if (contentLength && parseInt(contentLength) > 10 * 1024 * 1024) { // 10MB limit
+      return NextResponse.json(
+        { error: 'Request too large. Please upload smaller documents (max 10MB total).' },
+        { status: 413 }
+      );
+    }
+    
     // Rate limiting
     const clientIP = request.ip || request.headers.get('x-forwarded-for') || 'unknown';
     if (!globalRateLimiter.isAllowed(clientIP)) {
@@ -66,9 +80,32 @@ export async function POST(request: NextRequest) {
       }
       
       // Read file with proper encoding handling
-      const buffer = await file.arrayBuffer();
-      const decoder = new TextDecoder('utf-8', { fatal: false });
-      const content = decoder.decode(buffer);
+      let content: string;
+      
+      if (file.name.toLowerCase().endsWith('.pdf')) {
+        // Handle PDF files
+        try {
+          // For now, we'll use a simple approach - in production, use pdf-parse or pdfjs
+          const { WebPDFLoader } = await import('langchain/document_loaders/web/pdf');
+          const blob = new Blob([await file.arrayBuffer()], { type: 'application/pdf' });
+          const loader = new WebPDFLoader(blob);
+          const pdfDocs = await loader.load();
+          
+          // Combine all pages into single content
+          content = pdfDocs.map(doc => doc.pageContent).join('\n\n');
+        } catch (error) {
+          // Fallback to treating as text if PDF parsing fails
+          const buffer = await file.arrayBuffer();
+          const decoder = new TextDecoder('utf-8', { fatal: false });
+          content = decoder.decode(buffer);
+        }
+      } else {
+        // Handle text and markdown files
+        const buffer = await file.arrayBuffer();
+        const decoder = new TextDecoder('utf-8', { fatal: false });
+        content = decoder.decode(buffer);
+      }
+      
       const contentValidation = validateDocumentContent(content);
       if (!contentValidation.valid) {
         return NextResponse.json(
@@ -109,9 +146,31 @@ export async function POST(request: NextRequest) {
     // Initialize OpenAI client with user's API key
     const llm = createOpenAIClient(apiKey);
     
-    // Create and run RAGAS LangGraph
+    // Create and run RAGAS LangGraph with timeout protection
     const ragasGraph = new RAGASLangGraph(llm);
-    const results = await ragasGraph.run(documents);
+    
+    // For large documents or multiple files, use a simplified process
+    const totalContentLength = documents.reduce((sum, doc) => sum + doc.pageContent.length, 0);
+    const isLargeRequest = totalContentLength > 10000 || documents.length > 3;
+    
+    // Set a timeout of 50 seconds (leaving 10 seconds buffer)
+    const timeoutPromise = new Promise((_, reject) => 
+      setTimeout(() => reject(new Error('Generation timeout - process taking too long')), 50000)
+    );
+    
+    // If large request, limit complexity
+    if (isLargeRequest) {
+      console.log(`Large request detected (${totalContentLength} chars, ${documents.length} docs). Using simplified generation.`);
+      // Temporarily reduce max questions for large requests
+      if (validatedConfig.maxQuestions > 5) {
+        validatedConfig.maxQuestions = 5;
+      }
+    }
+    
+    const results = await Promise.race([
+      ragasGraph.run(documents),
+      timeoutPromise
+    ]) as any;
     
     // Apply configuration filters
     let filteredResults = { ...results };
@@ -119,7 +178,7 @@ export async function POST(request: NextRequest) {
     // Limit number of questions if specified
     if (validatedConfig.maxQuestions < results.evolved_questions.length) {
       const limitedQuestions = results.evolved_questions.slice(0, validatedConfig.maxQuestions);
-      const limitedQuestionIds = new Set(limitedQuestions.map(q => q.id));
+      const limitedQuestionIds = new Set(limitedQuestions.map((q: any) => q.id));
       
       filteredResults = {
         ...results,

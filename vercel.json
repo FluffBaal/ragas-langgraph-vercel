@@ -7,26 +7,21 @@
   "installCommand": "npm install",
   "functions": {
     "src/app/api/generate/route.ts": {
-      "maxDuration": 300,
-      "memory": 1024,
-      "runtime": "nodejs18.x"
+      "maxDuration": 60,
+      "memory": 1024
     },
     "src/app/api/status/route.ts": {
       "maxDuration": 30,
-      "memory": 256,
-      "runtime": "nodejs18.x"
+      "memory": 256
     },
     "src/app/api/health/route.ts": {
       "maxDuration": 10,
-      "memory": 128,
-      "runtime": "nodejs18.x"
+      "memory": 128
     }
   },
   "env": {
-    "OPENAI_API_KEY": "@openai-api-key",
     "OPENAI_MODEL": "gpt-4.1-mini",
-    "NODE_ENV": "production",
-    "NEXT_PUBLIC_APP_URL": "@app-url"
+    "NODE_ENV": "production"
   },
   "headers": [
     {

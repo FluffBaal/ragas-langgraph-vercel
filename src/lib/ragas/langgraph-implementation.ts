@@ -107,7 +107,7 @@ export class RAGASLangGraph {
   
   private async extractInitialQuestions(content: string): Promise<string[]> {
     const prompt = ChatPromptTemplate.fromTemplate(`
-      Based on the following content, generate 3 basic comprehension questions.
+      Based on the following content, generate 2 basic comprehension questions.
       Return only the questions, one per line, without numbering.
       
       Content: {content}

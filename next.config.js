@@ -10,6 +10,7 @@ const nextConfig = {
         'bufferutil': 'commonjs bufferutil'
       });
     }
+    
     return config;
   },
   env: {

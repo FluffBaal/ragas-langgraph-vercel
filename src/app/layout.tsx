@@ -9,6 +9,11 @@ export const metadata: Metadata = {
   description: 'Production-ready RAGAS Synthetic Data Generation using LangGraph deployed on Vercel',
   keywords: ['RAGAS', 'LangGraph', 'Synthetic Data', 'AI', 'Machine Learning', 'Vercel'],
   authors: [{ name: 'Fluff' }],
+  icons: {
+    icon: '/favicon.ico',
+    shortcut: '/favicon.ico',
+    apple: '/favicon.ico',
+  },
   openGraph: {
     title: 'RAGAS LangGraph Vercel',
     description: 'Production-ready RAGAS Synthetic Data Generation using LangGraph deployed on Vercel',
