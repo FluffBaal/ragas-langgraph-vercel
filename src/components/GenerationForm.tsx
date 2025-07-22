@@ -27,7 +27,7 @@ export const GenerationForm: React.FC<GenerationFormProps> = ({
 }) => {
   const [files, setFiles] = useState<File[]>([]);
   const [config, setConfig] = useState<GenerationConfig>({
-    maxQuestions: 10,
+    maxQuestions: 5,
     evolutionTypes: ['simple', 'multi_context', 'reasoning'],
     complexityTarget: 5,
     language: 'en',
@@ -423,9 +423,14 @@ export const GenerationForm: React.FC<GenerationFormProps> = ({
                 </span>
               </div>
               <Progress value={progress} className="w-full" />
-              <p className="text-xs text-gray-500">
-                This may take a few minutes depending on document size and complexity.
-              </p>
+              <div className="space-y-1">
+                <p className="text-xs text-gray-500">
+                  This may take a few minutes depending on document size and complexity.
+                </p>
+                <p className="text-xs text-amber-600">
+                  ⚡ Tip: For faster generation, try 3-5 questions or upload smaller documents.
+                </p>
+              </div>
             </div>
           )}
         </CardContent>

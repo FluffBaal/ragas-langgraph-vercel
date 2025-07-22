@@ -107,8 +107,8 @@ export class RAGASLangGraph {
   
   private async extractInitialQuestions(content: string): Promise<string[]> {
     const prompt = ChatPromptTemplate.fromTemplate(`
-      Based on the following content, generate 2 basic comprehension questions.
-      Return only the questions, one per line, without numbering.
+      Generate 1 concise comprehension question about the main topic.
+      Return only the question without numbering or explanation.
       
       Content: {content}
     `);
@@ -287,7 +287,7 @@ export class RAGASLangGraph {
     const errors = [...(state.errors || [])];
     
     // Take some existing questions and evolve them for reasoning
-    const existingQuestions = evolved_questions.slice(0, 2);
+    const existingQuestions = evolved_questions.slice(0, 1);
     
     for (const eq of existingQuestions) {
       // Find source context

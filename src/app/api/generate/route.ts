@@ -151,20 +151,23 @@ export async function POST(request: NextRequest) {
     
     // For large documents or multiple files, use a simplified process
     const totalContentLength = documents.reduce((sum, doc) => sum + doc.pageContent.length, 0);
-    const isLargeRequest = totalContentLength > 10000 || documents.length > 3;
+    const isLargeRequest = totalContentLength > 5000 || documents.length > 2;
+    const isVeryLargeRequest = totalContentLength > 15000 || documents.length > 4;
     
-    // Set a timeout of 50 seconds (leaving 10 seconds buffer)
+    // Set a timeout of 45 seconds (leaving 15 seconds buffer for Vercel's 60s limit)
     const timeoutPromise = new Promise((_, reject) => 
-      setTimeout(() => reject(new Error('Generation timeout - process taking too long')), 50000)
+      setTimeout(() => reject(new Error('Generation timeout - process taking too long')), 45000)
     );
     
-    // If large request, limit complexity
-    if (isLargeRequest) {
-      console.log(`Large request detected (${totalContentLength} chars, ${documents.length} docs). Using simplified generation.`);
-      // Temporarily reduce max questions for large requests
-      if (validatedConfig.maxQuestions > 5) {
-        validatedConfig.maxQuestions = 5;
-      }
+    // Apply optimizations based on request size but keep all evolution types
+    if (isVeryLargeRequest) {
+      console.log(`Very large request detected (${totalContentLength} chars, ${documents.length} docs). Limiting questions for performance.`);
+      validatedConfig.maxQuestions = Math.min(validatedConfig.maxQuestions, 3);
+      // Keep all evolution types as per requirements
+    } else if (isLargeRequest) {
+      console.log(`Large request detected (${totalContentLength} chars, ${documents.length} docs). Using optimized generation.`);
+      validatedConfig.maxQuestions = Math.min(validatedConfig.maxQuestions, 5);
+      // Keep all evolution types as per requirements
     }
     
     const results = await Promise.race([
@@ -183,15 +186,15 @@ export async function POST(request: NextRequest) {
       filteredResults = {
         ...results,
         evolved_questions: limitedQuestions,
-        question_answers: results.question_answers.filter(qa => limitedQuestionIds.has(qa.question_id)),
-        question_contexts: results.question_contexts.filter(qc => limitedQuestionIds.has(qc.question_id)),
+        question_answers: results.question_answers.filter((qa: any) => limitedQuestionIds.has(qa.question_id)),
+        question_contexts: results.question_contexts.filter((qc: any) => limitedQuestionIds.has(qc.question_id)),
         generation_metadata: {
           ...results.generation_metadata,
           total_questions: limitedQuestions.length,
           evolution_types_count: {
-            simple: limitedQuestions.filter(q => q.evolution_type === 'simple').length,
-            multi_context: limitedQuestions.filter(q => q.evolution_type === 'multi_context').length,
-            reasoning: limitedQuestions.filter(q => q.evolution_type === 'reasoning').length
+            simple: limitedQuestions.filter((q: any) => q.evolution_type === 'simple').length,
+            multi_context: limitedQuestions.filter((q: any) => q.evolution_type === 'multi_context').length,
+            reasoning: limitedQuestions.filter((q: any) => q.evolution_type === 'reasoning').length
           }
         }
       };
@@ -200,21 +203,21 @@ export async function POST(request: NextRequest) {
     // Filter by evolution types if specified
     if (validatedConfig.evolutionTypes.length < 3) {
       const allowedTypes = new Set(validatedConfig.evolutionTypes);
-      const filteredQuestions = filteredResults.evolved_questions.filter(q => allowedTypes.has(q.evolution_type));
-      const filteredQuestionIds = new Set(filteredQuestions.map(q => q.id));
+      const filteredQuestions = filteredResults.evolved_questions.filter((q: any) => allowedTypes.has(q.evolution_type));
+      const filteredQuestionIds = new Set(filteredQuestions.map((q: any) => q.id));
       
       filteredResults = {
         ...filteredResults,
         evolved_questions: filteredQuestions,
-        question_answers: filteredResults.question_answers.filter(qa => filteredQuestionIds.has(qa.question_id)),
-        question_contexts: filteredResults.question_contexts.filter(qc => filteredQuestionIds.has(qc.question_id)),
+        question_answers: filteredResults.question_answers.filter((qa: any) => filteredQuestionIds.has(qa.question_id)),
+        question_contexts: filteredResults.question_contexts.filter((qc: any) => filteredQuestionIds.has(qc.question_id)),
         generation_metadata: {
           ...filteredResults.generation_metadata,
           total_questions: filteredQuestions.length,
           evolution_types_count: {
-            simple: filteredQuestions.filter(q => q.evolution_type === 'simple').length,
-            multi_context: filteredQuestions.filter(q => q.evolution_type === 'multi_context').length,
-            reasoning: filteredQuestions.filter(q => q.evolution_type === 'reasoning').length
+            simple: filteredQuestions.filter((q: any) => q.evolution_type === 'simple').length,
+            multi_context: filteredQuestions.filter((q: any) => q.evolution_type === 'multi_context').length,
+            reasoning: filteredQuestions.filter((q: any) => q.evolution_type === 'reasoning').length
           }
         }
       };
@@ -259,7 +262,7 @@ export async function POST(request: NextRequest) {
       
       if (error.message.includes('timeout')) {
         return NextResponse.json(
-          { error: 'Request timeout. Please try again with smaller documents.' },
+          { error: 'Request timeout. Try reducing the number of questions, uploading smaller documents, or selecting fewer evolution types.' },
           { status: 408 }
         );
       }

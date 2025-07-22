@@ -63,14 +63,6 @@ export default function RootLayout({
                     Dashboard
                   </a>
                   <a
-                    href="/api/status"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium transition-colors"
-                  >
-                    API Status
-                  </a>
-                  <a
                     href="https://github.com/your-org/ragas-langgraph-vercel"
                     target="_blank"
                     rel="noopener noreferrer"
