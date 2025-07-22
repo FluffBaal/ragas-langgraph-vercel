@@ -1,0 +1,89 @@
+{
+  "version": 2,
+  "name": "ragas-langgraph-vercel",
+  "framework": "nextjs",
+  "buildCommand": "npm run build",
+  "devCommand": "npm run dev",
+  "installCommand": "npm install",
+  "functions": {
+    "src/app/api/generate/route.ts": {
+      "maxDuration": 300,
+      "memory": 1024,
+      "runtime": "nodejs18.x"
+    },
+    "src/app/api/status/route.ts": {
+      "maxDuration": 30,
+      "memory": 256,
+      "runtime": "nodejs18.x"
+    },
+    "src/app/api/health/route.ts": {
+      "maxDuration": 10,
+      "memory": 128,
+      "runtime": "nodejs18.x"
+    }
+  },
+  "env": {
+    "OPENAI_API_KEY": "@openai-api-key",
+    "OPENAI_MODEL": "gpt-4.1-mini",
+    "NODE_ENV": "production",
+    "NEXT_PUBLIC_APP_URL": "@app-url"
+  },
+  "headers": [
+    {
+      "source": "/api/(.*)",
+      "headers": [
+        {
+          "key": "Access-Control-Allow-Origin",
+          "value": "*"
+        },
+        {
+          "key": "Access-Control-Allow-Methods",
+          "value": "GET, POST, PUT, DELETE, OPTIONS"
+        },
+        {
+          "key": "Access-Control-Allow-Headers",
+          "value": "Content-Type, Authorization, X-Requested-With"
+        },
+        {
+          "key": "Access-Control-Max-Age",
+          "value": "86400"
+        }
+      ]
+    },
+    {
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        },
+        {
+          "key": "X-Frame-Options",
+          "value": "DENY"
+        },
+        {
+          "key": "X-XSS-Protection",
+          "value": "1; mode=block"
+        },
+        {
+          "key": "Referrer-Policy",
+          "value": "strict-origin-when-cross-origin"
+        }
+      ]
+    }
+  ],
+  "redirects": [
+    {
+      "source": "/",
+      "destination": "/dashboard",
+      "permanent": false
+    }
+  ],
+  "rewrites": [
+    {
+      "source": "/api/v1/(.*)",
+      "destination": "/api/$1"
+    }
+  ]
+}
+
