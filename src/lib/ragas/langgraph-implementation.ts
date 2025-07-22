@@ -11,7 +11,7 @@ import {
   GenerationResult 
 } from '@/types';
 
-// Simple graph implementation without external langgraph dependency
+// Simple graph implementation 
 class SimpleGraph<T> {
   private nodes: Map<string, (state: T) => Promise<Partial<T>>> = new Map();
   private edges: Map<string, string> = new Map();

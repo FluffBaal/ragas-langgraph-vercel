@@ -22,8 +22,6 @@ export const ExtractedTextPreview: React.FC<ExtractedTextPreviewProps> = ({
   onClose
 }) => {
   const [selectedDoc, setSelectedDoc] = React.useState(0);
-
-  console.log('ExtractedTextPreview render:', { isVisible, documentsCount: documents.length });
   
   if (!isVisible || documents.length === 0) return null;
 
