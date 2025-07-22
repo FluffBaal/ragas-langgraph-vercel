@@ -1,34 +1,13 @@
-# RAGAS LangGraph Vercel - Production Ready
-
-A production-ready implementation of RAGAS (Retrieval Augmented Generation Assessment) synthetic data generation using LangGraph agent architecture, deployed on Vercel.
-
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/your-org/ragas-langgraph-vercel)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
-[![Next.js](https://img.shields.io/badge/Next.js-000000?logo=next.js&logoColor=white)](https://nextjs.org/)
-
 ## 🚀 Features
 
 ### Core Capabilities
 - **LangGraph Agent Architecture**: Specialized agents for different evolution types
 - **Three Evolution Types**: Simple, Multi-Context, and Reasoning evolution
-- **Production-Ready**: Full error handling, validation, and monitoring
-- **Scalable**: Optimized for Vercel's serverless environment
-- **Type-Safe**: Complete TypeScript implementation
-- **Comprehensive Testing**: Unit, integration, and API tests
 
 ### Evolution Types
 1. **Simple Evolution**: Basic question enhancement and refinement
 2. **Multi-Context Evolution**: Cross-document synthesis and comparison
 3. **Reasoning Evolution**: Complex analytical and inferential questions
-
-### Technical Features
-- **File Support**: Text (.txt), Markdown (.md), and PDF files
-- **Rate Limiting**: IP-based request throttling
-- **Input Validation**: Comprehensive file and configuration validation
-- **Error Handling**: Detailed error messages and recovery
-- **Monitoring**: Health checks and system status endpoints
-- **Security**: CORS configuration and security headers
 
 ## 🏗️ Architecture
 
@@ -41,7 +20,7 @@ A production-ready implementation of RAGAS (Retrieval Augmented Generation Asses
                                 │                        │
                        ┌──────────────────┐    ┌─────────────────┐
                        │   Validation     │    │   OpenAI API    │
-                       │   & Rate Limit   │    │   (GPT-4o-mini) │
+                       │   & Rate Limit   │    │  (GPT-4.1-mini) │
                        └──────────────────┘    └─────────────────┘
 ```
 
@@ -246,125 +225,12 @@ npm run test         # Run tests
 npm run format       # Prettier formatting
 ```
 
-### Code Quality
 
-- **TypeScript**: Full type safety
-- **ESLint**: Code linting
-- **Prettier**: Code formatting
-- **Jest**: Testing framework
-- **Husky**: Git hooks (optional)
 
-## 🔍 Monitoring
-
-### Health Checks
-
-- **Health**: `GET /api/health` - Basic health status
-- **Status**: `GET /api/status` - Detailed system information
-- **Ping**: `POST /api/status` with `{"action": "ping"}`
-
-### Metrics
-
-- Request/response times
-- Error rates
-- Memory usage
-- Function execution duration
-- Rate limiting statistics
-
-### Logging
-
-```javascript
-// Error logging
-console.error('Processing error:', error);
-
-// Performance logging
-console.log(`Generation completed in ${duration}ms`);
-
-// Request logging
-console.log(`Processing ${fileCount} documents`);
-```
-
-## 🛡️ Security
-
-### Input Validation
-
-- File type validation
-- File size limits
-- Content length validation
-- Configuration validation
-
-### Rate Limiting
-
-- 100 requests per 15-minute window per IP
-- Configurable limits
-- Graceful degradation
-
-### Security Headers
-
-- CORS configuration
-- Content Security Policy
-- XSS protection
-- Frame options
-
-## 🤝 Contributing
-
-1. **Fork the repository**
-2. **Create a feature branch**
-   ```bash
-   git checkout -b feature/amazing-feature
-   ```
-3. **Make changes and test**
-   ```bash
-   npm run test
-   npm run lint
-   ```
-4. **Commit changes**
-   ```bash
-   git commit -m 'Add amazing feature'
-   ```
-5. **Push to branch**
-   ```bash
-   git push origin feature/amazing-feature
-   ```
-6. **Open a Pull Request**
-
-### Development Guidelines
-
-- Follow TypeScript best practices
-- Write comprehensive tests
-- Update documentation
-- Follow conventional commits
-- Ensure all checks pass
 
 ## 📄 License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-## 🙏 Acknowledgments
 
-- **RAGAS**: Original framework for synthetic data generation
-- **LangChain**: LLM application framework
-- **OpenAI**: GPT models for text generation
-- **Vercel**: Deployment and hosting platform
-- **Next.js**: React framework for production
-
-## 📞 Support
-
-- **Documentation**: [API.md](./API.md), [DEPLOYMENT.md](./DEPLOYMENT.md)
-- **Issues**: [GitHub Issues](https://github.com/your-org/ragas-langgraph-vercel/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/your-org/ragas-langgraph-vercel/discussions)
-
-## 🗺️ Roadmap
-
-- [ ] Additional evolution types
-- [ ] Multi-language support
-- [ ] Advanced caching strategies
-- [ ] Real-time processing updates
-- [ ] Batch processing API
-- [ ] Custom model support
-- [ ] Analytics dashboard
-- [ ] Export formats (JSON, CSV, JSONL)
-
----
-
-**Built with ❤️ using Next.js, TypeScript, and deployed on Vercel**
 
